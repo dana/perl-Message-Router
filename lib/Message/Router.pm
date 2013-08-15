@@ -97,6 +97,8 @@ sub mroute {
 
 __END__
 
+=head1 NAME
+
 Message::Router - Fast, simple message routing
 
 =head1 SYNOPSIS
