@@ -20,6 +20,19 @@ sub main::h1 {
 }
 my $config = {
     routes => {
+        1 => {
+            match => {
+                a => 'b',
+            },
+            forwards => [
+                {   handler => 'main::h1',
+                    x => 'y',
+                },
+            ],
+            transform => {
+                this => 'foo',
+            },
+        },
         10 => {
             match => {
                 a => 'b',
