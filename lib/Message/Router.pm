@@ -17,35 +17,39 @@ sub mroute_config {
             if shift;
         die 'single argument must be a HASH reference'
             if not $new_config or not ref $new_config eq 'HASH';
-        die "passed config must hash an ARRAY 'routes' key"
+        die "passed config must have an ARRAY or HASH 'routes' key"
             if not $new_config->{routes};
-        die "passed config must hash an ARRAY 'routes' key"
-            if not ref $new_config->{routes} eq 'ARRAY';
-        foreach my $route (@{$new_config->{routes}}) {
-            die "each route must be a HASH reference"
-                if not $route;
-            die "each route must be a HASH reference"
-                if not ref $route eq 'HASH';
-            die "each route has to have a HASH reference 'match' key"
-                if not $route->{match};
-            die "each route has to have a HASH reference 'match' key"
-                if not ref $route->{match} eq 'HASH';
-            if($route->{transform}) {
-                die "the optional 'transform' key must be a HASH reference"
-                    if ref $route->{transform} ne 'HASH';
-            }
-            if($route->{forwards}) {
-                die "the optional 'forwards' key must be an ARRAY reference"
-                    if ref $route->{forwards} ne 'ARRAY';
-                foreach my $forward (@{$route->{forwards}}) {
-                    die 'each forward must be a HASH reference'
-                        if not $forward;
-                    die 'each forward must be a HASH reference'
-                        if ref $forward ne 'HASH';
-                    die "each forward must have a scalar 'handler' key"
-                        if not $forward->{handler};
-                    die "each forward must have a scalar 'handler' key"
-                        if ref $forward->{handler};
+        if(     ref $new_config->{routes} ne 'ARRAY' and
+                ref $new_config->{routes} ne 'HASH') {
+            die "passed config must have an ARRAY or HASH 'routes' key"
+        }
+        if(ref $new_config->{routes} eq 'ARRAY') {
+            foreach my $route (@{$new_config->{routes}}) {
+                die "each route must be a HASH reference"
+                    if not $route;
+                die "each route must be a HASH reference"
+                    if not ref $route eq 'HASH';
+                die "each route has to have a HASH reference 'match' key"
+                    if not $route->{match};
+                die "each route has to have a HASH reference 'match' key"
+                    if not ref $route->{match} eq 'HASH';
+                if($route->{transform}) {
+                    die "the optional 'transform' key must be a HASH reference"
+                        if ref $route->{transform} ne 'HASH';
+                }
+                if($route->{forwards}) {
+                    die "the optional 'forwards' key must be an ARRAY reference"
+                        if ref $route->{forwards} ne 'ARRAY';
+                    foreach my $forward (@{$route->{forwards}}) {
+                        die 'each forward must be a HASH reference'
+                            if not $forward;
+                        die 'each forward must be a HASH reference'
+                            if ref $forward ne 'HASH';
+                        die "each forward must have a scalar 'handler' key"
+                            if not $forward->{handler};
+                        die "each forward must have a scalar 'handler' key"
+                            if ref $forward->{handler};
+                    }
                 }
             }
         }
@@ -64,7 +68,15 @@ sub mroute {
             unless ref $message and ref $message eq 'HASH';
         die 'single argument must be a HASH reference'
             if shift;
-        foreach my $route (@{$config->{routes}}) {
+        my @routes;
+        if(ref $config->{routes} eq 'ARRAY') {
+            @routes = @{$config->{routes}};
+        } elsif(ref $config->{routes} eq 'HASH') {
+            foreach my $order (sort { $a <=> $b } keys %{$config->{routes}}) {
+                push @routes, $config->{routes}->{$order};
+            }
+        }
+        foreach my $route (@routes) {
             eval {
                 if(mmatch($message, $route->{match})) {
                     if($route->{transform}) {
