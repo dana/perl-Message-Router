@@ -35,11 +35,31 @@ Message::Router - Fast, simple message routing
     });
     mroute({a => 'b'}); #prints 'that', and then 'y', per the handler1 sub
 
+    mroute_config({
+        routes => {
+            10 => {
+                match => {
+                    a => 'b',
+                },
+                forwards => [
+                    {   handler => 'main::handler1',
+                        x => 'y',
+                    },
+                ],
+                transform => {
+                    this => 'that',
+                },
+            }
+        ],
+    });
+    mroute({a => 'b'}); #prints 'that', and then 'y', per the handler1 sub
+    #same as the ARRAY based, but it uses the HASH keys in numerical order
+
 # DESCRIPTION
 
 This library allows fast, flexible and general message routing.
 
-# FUNCTION
+# FUNCTIONS
 
 ## mroute\_config($config);
 
@@ -52,7 +72,9 @@ Pass $message through the config; this will emit zero or more callbacks.
 # TODO
 
 A config validator.
+
 Short-circuiting
+
 More flexible match and transform configuration forms
 
 # BUGS
@@ -65,4 +87,4 @@ Copyright (c) 2012, 2013 Dana M. Diederich. All Rights Reserved.
 
 # AUTHOR
 
-Dana M. Diederich <diederich@gmail.com>
+Dana M. Diederich <dana@realms.org>
