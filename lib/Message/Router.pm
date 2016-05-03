@@ -116,8 +116,9 @@ sub mroute {
                 push @routes, $config->{routes}->{$order};
             }
         }
+        ROUTE:
         foreach my $route (@routes) {
-            eval {
+            my $did_short_circuit = eval {
                 if(mmatch($message, $route->{match})) {
                     if($route->{transform}) {
                         mtransform($message, $route->{transform});
@@ -133,11 +134,18 @@ sub mroute {
                             );
                         }
                     }
+                    if(     $route->{'.router_control'} and
+                            ref $route->{'.router_control'} eq 'HASH' and
+                            $route->{'.router_control'}->{short_circuit}) {
+                        return 1;
+                    }
                 }
+                return 0;
             };
             if($@) {
                 die "Message::Router::mroute: $@\n";
             }
+            last if $did_short_circuit;
         }
     };
     if($@) {
